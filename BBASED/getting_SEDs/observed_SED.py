@@ -1,5 +1,8 @@
 """ observed_SED.py – Functions for building observed SED by querying Gaia
     and the cross matched catalogues using the provided source information.
+
+    Also functions for getting key source information such as gal coord.
+    and distance via parallax from Gaia
 """
 #for collection source data
 from astropy.coordinates import SkyCoord #??
