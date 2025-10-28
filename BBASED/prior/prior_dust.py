@@ -42,7 +42,7 @@ def samples_Av(l, b, d):
     
     return scat_ebv * Rv_e
 
-def build_dust_prior(d_mu, l, b):
+def build_dust_prior(d_mu, d_sigma, l, b):
     """ this function creates a sample of distance and dust values
         for the purpose of constructing the prior on dust
         returns the average value of Av and the variance"""

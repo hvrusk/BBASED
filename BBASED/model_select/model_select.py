@@ -106,7 +106,6 @@ def set_param_lim(lib1, lib2):
     elif lib2 == "NAN": #single star system
         return teff1_l, teff1_u, logg1_l, logg1_u, log_R1_l, log_R1_u, meta1_l, meta1_u
 
-#TEST
 def set_labels(lib1, lib2):
     """ This function will set the labels used for the graphical representation of the BBASED
         output - this is determined by the parameter types in each model"""
