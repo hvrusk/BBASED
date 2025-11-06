@@ -7,3 +7,6 @@ with open('rad_prior_files/WD_Rad_prior.pkl', 'rb') as f:
 
 with open('rad_prior_files/MS_Rad_prior.pkl', 'rb') as f:
     MS_radius_prior = pickle.load(f)
+
+with open('rad_prior_files/MS_met_prior.pkl', 'rb') as f:
+    met_prior = pickle.load(f)
