@@ -8,12 +8,12 @@ def model_funct(lib):
         interpolation function associated with that model to build model SEDs
     """
     if lib == 'bt-settl-cifist':
-        with open('model_interp/lib_function_BTSC_CUBIC.pkl', 'rb') as f:
+        with open('BBASED/run_BBASED/set_up/model_interp/lib_function_BTSC_CUBIC.pkl', 'rb') as f:
             functs = pickle.load(f)
     if lib == 'koester2':
-        with open('model_interp/lib_function_K2_CUBIC.pkl', 'rb') as f:
+        with open('BBASED/run_BBASED/set_up/model_interp/lib_function_K2_CUBIC.pkl', 'rb') as f:
             functs = pickle.load(f)
     if lib == 'Kurucz2003':
-        with open('model_interp/lib_function_K2003_CUBIC.pkl', 'rb') as f:
+        with open('BBASED/run_BBASED/set_up/model_interp/lib_function_K2003_CUBIC.pkl', 'rb') as f:
             functs = pickle.load(f)
     return functs

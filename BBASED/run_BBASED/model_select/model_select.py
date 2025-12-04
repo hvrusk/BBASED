@@ -11,7 +11,8 @@
     documentation for how to integrate your own models into the code
 
 """
-
+import numpy as np
+import random
 
 def select_model(Model_1, Model_2=None):
     """ Model input to run BBASED with
@@ -101,7 +102,7 @@ def set_param_lim(lib1, lib2):
 
 
     if lib2 != "NAN":   #binary star system
-        return (teff1_l, teff1_u, logg1_l, logg1_u, log_R1_l, log_R1_u, meta1_l, meta1_u
+        return (teff1_l, teff1_u, logg1_l, logg1_u, log_R1_l, log_R1_u, meta1_l, meta1_u,
                 teff2_l, teff2_u, logg2_l, logg2_u, log_R2_l, log_R2_u, meta2_l, meta2_u)
     elif lib2 == "NAN": #single star system
         return teff1_l, teff1_u, logg1_l, logg1_u, log_R1_l, log_R1_u, meta1_l, meta1_u
@@ -136,7 +137,7 @@ def set_param_num(labels):
 
     return param_num #easypeasylemonsquezy
 
-def set_pos(lib1, lib2):
+def set_pos(lib1, lib2, d_mu):
     """ The sampling algorithm our program uses requires us to set an initial position for our
         walkers to begin. We choose to randomly select this position based on the parameter limits
         as determined by the model selections
@@ -213,7 +214,7 @@ def set_pos(lib1, lib2):
                 teff1_guess = random.uniform(teff1_l, teff1_u)
                 teff2_guess = random.uniform(teff2_l, teff2_u)
 
-        if meta1_l and meta2_l:
+        if meta1_l and meta2_l:   #both components have a met. parameter
             pos = [teff1_guess,
                    random.uniform(logg1_l, logg1_u),
                    random.uniform(log_R1_l, log_R1_u),
@@ -226,9 +227,9 @@ def set_pos(lib1, lib2):
                    0.9,
                    3.1,
                    -1.5 ]
-        elif meta1_l:
+        elif meta1_l:           #only the first component has a met. parameter
             pos = [teff1_guess,
-                   random.uniform(logg1_l, logg1_u),
+                    random.uniform(logg1_l, logg1_u),
                    random.uniform(log_R1_l, log_R1_u),
                    random.uniform(meta1_l, meta1_u),
                    teff2_guess,
@@ -238,7 +239,7 @@ def set_pos(lib1, lib2):
                    0.9,
                    3.1,
                    -1.5 ]
-        elif meta2_l:
+        elif meta2_l:           #only the second component has a met. parameter
              pos = [teff1_guess,
                    random.uniform(logg1_l, logg1_u),
                    random.uniform(log_R1_l, log_R1_u),
@@ -250,8 +251,8 @@ def set_pos(lib1, lib2):
                    0.9,
                    3.1,
                    -1.5 ]
-            else:
-                pos = [teff1_guess,
+        else:                   #neither component has a met. parameter
+            pos = [teff1_guess,
                    random.uniform(logg1_l, logg1_u),
                    random.uniform(log_R1_l, log_R1_u),
                    teff2_guess,
@@ -263,7 +264,7 @@ def set_pos(lib1, lib2):
                    -1.5 ]
 
     elif lib2 == "NAN": #single star system
-        pos = [teff1_guess,
+        pos = [random.uniform(teff1_l, teff1_u),
                random.uniform(logg1_l, logg1_u),
                random.uniform(log_R1_l, log_R1_u),
                np.log10(d_mu),

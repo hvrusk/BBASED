@@ -10,6 +10,8 @@ from astroquery.simbad import Simbad
 from astroquery.gaia import Gaia
 from astropy.table import Table
 import astropy.units as units
+import numpy as np
+import pandas as pd
 
 
 def get_plx(ra, dec):
@@ -276,7 +278,7 @@ def get_SED(main_id):
 
     #sort out values
     fltr_dict = {}
-    eff_waves = pd.read_csv("eff_waves.csv")
+    eff_waves = pd.read_csv("BBASED/run_BBASED/set_up/eff_waves.csv")
     for key in mag_dict:
         if np.ma.is_masked(mag_dict[key]['mag'])==False: #want to take out entries with no values
             mag = float(mag_dict[key]['mag'])

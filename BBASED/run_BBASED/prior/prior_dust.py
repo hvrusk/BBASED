@@ -1,5 +1,13 @@
 """ Prior functions for running BBASED """
 
+import numpy as np
+import astropy.units as units
+from astropy.coordinates import SkyCoord
+from dustmaps.bayestar import BayestarQuery
+
+bayestar = BayestarQuery(version='bayestar2019')
+R_kpc_conversion = 5.08327 * 10**-22 #(kpc/R)**2
+
 def samples_d(d_mu, d_sigma, samp_num):
     """ get samples of d in kpc from p(d)
         d_mu is the distance we get from 1/plx
@@ -66,10 +74,10 @@ def build_dust_prior(d_mu, d_sigma, l, b):
     return Av_mu, Av_sigma_sq
 
     
-def Av_d_log_prior(Av_unbounded, dist):
+def Av_d_log_prior(Av_unbounded, dist, var_dict):
     """ log prior used in the sampling procedure
         requires you to define the parameters of the 2d gaussian as global variables
         before running 
     """
-    prior = np.log(1/(2*np.pi*d_sigma*(Av_sigma_sq**0.5))) - 0.5*( ((dist-d_mu)/d_sigma)**2 + ((Av_unbounded-Av_mu)**2)/Av_sigma_sq  )
+    prior = np.log(1/(2*np.pi*var_dict['d_sigma']*(var_dict['Av_sigma_sq']**0.5))) - 0.5*( ((dist-var_dict['d_mu'])/var_dict['d_sigma'])**2 + ((Av_unbounded-var_dict['Av_mu'])**2)/var_dict['Av_sigma_sq']  )
     return prior
