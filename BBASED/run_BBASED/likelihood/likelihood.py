@@ -5,7 +5,6 @@ print("likelihood loading")
 import numpy as np
 import math 
 import csv
-from ..set_up.model_funct import model_funct
 R_kpc_conversion = 5.08327 * 10**-22 #(kpc/R)**2
 
 
@@ -54,14 +53,12 @@ def log_likelihood_1(theta, var_dict):
     #clip negative values of Av to 0:
     Av_clipped = np.clip(Av_unbounded, 0, None)
     
-    #assigning SED model function F_i(θ)
-    funct_list1 = model_funct(var_dict['lib1'])
 
     #TEMP
     if var_dict['lib1'] =='Kurucz2003':
-        flx_dict1 = get_spec_funct(funct_list1, 10**(log_teff1), logg1, Av_clipped, Rv, var_dict, meta=meta1)
+        flx_dict1 = get_spec_funct(var_dict['funct_list1'], 10**(log_teff1), logg1, Av_clipped, Rv, var_dict, meta=meta1)
     else:
-        flx_dict1 = get_spec_funct(funct_list1, 10**(log_teff1), logg1, Av_clipped, Rv, var_dict) 
+        flx_dict1 = get_spec_funct(var_dict['funct_list1'], 10**(log_teff1), logg1, Av_clipped, Rv, var_dict) 
 
     R1_sq = ((10**log_R1)**2)
     dist_sq = ((10**log_dist)**2)
@@ -125,14 +122,14 @@ def log_likelihood_2(theta, var_dict):
 
     #dict of [filter_id] : eff_wavelengths, filter_flux_values
     if var_dict['lib1'] =='Kurucz2003':
-        flx_dict1 = get_spec_funct(funct_list1, 10**(log_teff1), logg1, Av_clipped, Rv, var_dict, meta=meta1)
+        flx_dict1 = get_spec_funct(var_dict['funct_list1'], 10**(log_teff1), logg1, Av_clipped, Rv, var_dict, meta=meta1)
     else:
-        flx_dict1 = get_spec_funct(funct_list1, 10**(log_teff1), logg1, Av_clipped, Rv, var_dict)
+        flx_dict1 = get_spec_funct(var_dict['funct_list1'], 10**(log_teff1), logg1, Av_clipped, Rv, var_dict)
     
     if var_dict['lib2'] == 'Kurucz2003':
-        flx_dict2 = get_spec_funct(funct_list2, 10**(log_teff2), logg2, Av_clipped, Rv, var_dict, meta=meta2)
+        flx_dict2 = get_spec_funct(var_dict['funct_list2'], 10**(log_teff2), logg2, Av_clipped, Rv, var_dict, meta=meta2)
     else:
-        flx_dict2 = get_spec_funct(funct_list2, 10**(log_teff2), logg2, Av_clipped, Rv, var_dict)
+        flx_dict2 = get_spec_funct(var_dict['funct_list2'], 10**(log_teff2), logg2, Av_clipped, Rv, var_dict)
 
     R1_sq = ((10**log_R1)**2)
     R2_sq = ((10**log_R2)**2)

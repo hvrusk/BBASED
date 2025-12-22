@@ -1,4 +1,4 @@
-""" Module for running the main BBASED program"""
+""" Module for running the main BBASED program  *with synthetic data"""
 
 print("loading run_BBASED")
 
@@ -14,6 +14,7 @@ from .probability.probability import log_probability_1
 from .probability.probability import log_probability_2
 from .prior.prior import log_prior_1
 from .prior.prior import log_prior_2
+from .likelihood.likelihood import filter_eff_wave
 
 
 import numpy as np
@@ -24,14 +25,42 @@ import dill
 import pickle
 from multiprocess import Pool
 
+def get_spec_funct(funct_list, teff, logg, Av=0, Rv=3, meta='na'):
 
-def run_BBASED(info, info_type, walkers, sample_num, model_1, model_2 = None):
+    fltr_flxs = {}
+    if meta == 'na':
+        #the keys in the funct list are the filter ids
+        for key in funct_list:
+            eff_wave = float(filter_eff_wave(key))
+            filt_flux = float(funct_list[key]([teff,logg, Av, Rv])[0])
+            fltr_flxs[key] = {'eff_wave':eff_wave, 'filt_flux':filt_flux}
+    else: #ie for models with meta listed
+        for key in funct_list:
+            eff_wave = float(filter_eff_wave(key))
+            filt_flux = float(funct_list[key]([teff,logg, meta, Av, Rv])[0])
+            fltr_flxs[key] = {'eff_wave':eff_wave, 'filt_flux':filt_flux}
+
+    #returns dict of flux and eff waves for every filter in a set
+    return fltr_flxs
+
+
+def synth_run_BBASED(info, walkers, sample_num, model_1, model_2 = None):
 
     """ For Running BBASED:
 
         Parameters:
-            info: the coords, or name of the source
-            info_type: whether the coords you've given are "ICRS_coord", "gal_coord", or "source_name"
+            info: a dictionary containing the relevant parameters to synthesize the data
+                info['d_mu']        - mean distance (kpc)e
+                info['d_sigma']     - Distance uncertainty
+                info['Rv_q']        - Empirical ratio of total dust extinction to selective extinction
+                info['Av_mu']       - Total dust extinction in the V band
+                info['Av_sigma']    - Av uncertainty
+                info['teff1']       - 1st effective temperature (K)
+                info['logg1']       - 1st surface gravity (log form)
+                info['meta1']       - 1st metallicity [M/H] (dex)
+                info['R1']          - 1st radius (solar radii)
+                info['noise']       - real noise added to data
+                info['rep_noise']   - noise reported to BBASED per wavelength
             walkers: number of walkers to use in your sampling procedure (try 128 for single-stars and 256 for binaries)
             sample_num: number of steps the walkers should take during sampling, set at your discretion, 3000 works well enough
             model_1: first stellar model type, required, either "bt-settl-cifist", "koester2" or "Kurucz2003" are available
@@ -41,32 +70,28 @@ def run_BBASED(info, info_type, walkers, sample_num, model_1, model_2 = None):
     """
 
     #1. Set up
-    #1.1 we use the user information to get the source data
+    #1.1 we pull the relevant parameters from the user dictionary
     
-    data = get_source(info, info_type)
-    main_id = data[0]
+    d_mu = info['d_mu']
+    d_sigma = info['d_sigma']
+    Rv_q = info['Rv_q']
+    Av_q = info['Av_mu']
+    
+    yerr_true = info['noise']
+    yerr_reported = info['rep_noise']
+    
+    teff1 = info['teff1']
+    logg1 = info['logg1']
+    meta1 = info['meta1']
+    R1 = info['R1']
+    
+    if model_2:
+        teff2 = info['teff2']
+        logg2 = info['logg2']
+        meta2 = info['meta2']
+        R2 = info['R2']
 
-    l = float(data[1])  #galactic coord in degrees
-    b = float(data[2])  #galactic coord in degrees
-    ra = float(data[5]) #ICRS coord in degrees
-    dec = float(data[6])#ICRS coord in degrees
-    plx = data[3]       #mas
-    plx_err = data[4]   #mas
-
-    #1.2 we use the data from 1.1 to determine distance and distance uncertainty
-
-    d_mu = (1/plx)        #kpc
-
-    d_minus = 1/(plx+plx_err)
-    d_plus  = 1/(plx-plx_err)
-
-    d_sigma = ( (d_plus - d_mu) + (d_mu - d_minus) ) / 2   #kpc
-
-    #1.3 we set the empirical value of Rv
-
-    Rv_q = 3.1
-
-    #1.4 we pull the model libraries based on the user input
+    #1.2 we pull the model libraries based on the user input
 
     funct_list1 = model_funct(model_1)
     if model_2:
@@ -75,22 +100,25 @@ def run_BBASED(info, info_type, walkers, sample_num, model_1, model_2 = None):
     else:
         num_comps = 1
 
-    #1.5 we label model libraries, if there's only one model, then lib2 is labeled as "NAN"
+    #1.3 we label model libraries, if there's only one model, then lib2 is labeled as "NAN"
 
     lib1, lib2 = select_model(model_1, model_2)
 
-    #1.6 we set our parameter labels
+    #1.4 we set our parameter labels
 
     labels = set_labels(lib1, lib2)
 
-    #1.7 we set the parameter number
+    #1.5 we set the parameter number
 
     param_num = set_param_num(labels)
 
     #2. Collect the data
-    #2.1 we use the main_id found in the data gathering process to then gather the photometry
+    #2.1 we use the parameters to synthesize a system
 
-    SED = get_SED(main_id)
+    if lib1 =='Kurucz2003':
+        flux_dict1 = get_spec_funct(funct_list1, teff1, logg1, Av=Av_q, Rv=Rv_q, meta=meta1)
+    else:
+        flux_dict1 = get_spec_funct(funct_list1, teff1, logg1, Av=Av_q, Rv=Rv_q)
 
     #2.2  we separate the SED into its respective parts: effective wavelengths, log flux, flux err, and respective filters
 
@@ -141,8 +169,6 @@ def run_BBASED(info, info_type, walkers, sample_num, model_1, model_2 = None):
     var_dict['param_num'] = param_num
     var_dict['SED'] = SED
     var_dict['filts'] = filts
-    
-    var_dict['funct_list1'] = funct_list1
     var_dict['teff1_l'] = teff1_l
     var_dict['teff1_u'] = teff1_u
     var_dict['logg1_l'] = logg1_l
@@ -153,7 +179,6 @@ def run_BBASED(info, info_type, walkers, sample_num, model_1, model_2 = None):
     var_dict['meta1_u'] = meta1_u
     
     if lib2 != "NAN":
-        var_dict['funct_list2'] = funct_list2
         var_dict['teff2_l'] = teff2_l
         var_dict['teff2_u'] = teff2_u
         var_dict['logg2_l'] = logg2_l
